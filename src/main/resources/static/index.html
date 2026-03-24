@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HKS | Hastane Kayıt Sistemi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --hks-blue: #2c3e50; --hks-red: #e74c3c; --hks-light: #f4f7f6; }
+        body { background-color: var(--hks-light); font-family: 'Segoe UI', sans-serif; }
+
+        /* GİRİŞ EKRANI */
+        #loginPage {
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--hks-blue) 0%, #34495e 100%);
+        }
+        .login-card {
+            width: 100%; max-width: 450px; padding: 40px; border-radius: 20px;
+            background: white; box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        /* ANA PANEL */
+        #mainPanel { display: none; }
+        .sidebar { background: var(--hks-blue); min-height: 100vh; color: white; position: fixed; width: 16.66%; z-index: 100; }
+        .main-content { margin-left: 16.66%; padding: 30px; }
+        .nav-link { color: #bdc3c7; cursor: pointer; padding: 15px; transition: 0.3s; border-radius: 8px; margin: 5px 10px; display: block; text-decoration: none; }
+        .nav-link:hover, .nav-link.active { color: white; background: #34495e; border-left: 5px solid var(--hks-red); }
+
+        .section { display: none; animation: fadeIn 0.4s; }
+        .section.active { display: block; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div id="loginPage">
+    <div class="login-card text-center">
+        <h2 id="formTitle" class="mb-4 text-primary fw-bold"><i class="fa-solid fa-hospital-user"></i> HKS GİRİŞ</h2>
+
+        <div id="registerFields" style="display: none;">
+            <div class="row">
+                <div class="col-md-6 mb-3 text-start"><label class="form-label">Ad</label><input type="text" id="reg_name" class="form-control" placeholder="Adınız"></div>
+                <div class="col-md-6 mb-3 text-start"><label class="form-label">Soyad</label><input type="text" id="reg_surname" class="form-control" placeholder="Soyadınız"></div>
+            </div>
+        </div>
+
+        <div class="mb-3 text-start">
+            <label class="form-label">TC Kimlik No</label>
+            <input type="text" id="u_tc" class="form-control" maxlength="11" placeholder="11 Haneli TC">
+        </div>
+        <div class="mb-4 text-start">
+            <label class="form-label">Şifre</label>
+            <input type="password" id="u_pass" class="form-control" placeholder="******">
+        </div>
+
+        <button id="mainBtn" onclick="handleLogin()" class="btn btn-primary w-100 py-2 fw-bold shadow">Sisteme Giriş Yap</button>
+
+        <p class="mt-4 text-muted" id="toggleText">
+            Hesabınız yok mu? <a href="javascript:void(0)" onclick="toggleForm(true)" class="fw-bold text-decoration-none">Hemen Kayıt Ol</a>
+        </p>
+    </div>
+</div>
+
+<div id="mainPanel" class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 sidebar p-0">
+            <div class="text-center py-4 border-bottom border-secondary">
+                <h3 class="text-white fw-bold">HKS PANEL</h3>
+            </div>
+            <nav class="nav flex-column mt-3">
+                <a class="nav-link active" onclick="showSection('homeSection', this)"><i class="fa-solid fa-house me-2"></i> Anasayfa</a>
+                <a class="nav-link" onclick="showSection('appointmentSection', this)"><i class="fa-solid fa-calendar-plus me-2"></i> Randevu Al</a>
+                <a class="nav-link" onclick="showSection('myAppointmentsSection', this)"><i class="fa-solid fa-notes-medical me-2"></i> Randevularım</a>
+                <a class="nav-link text-danger" onclick="logout()"><i class="fa-solid fa-power-off me-2"></i> Güvenli Çıkış</a>
+            </nav>
+        </div>
+
+        <div class="col-md-10 main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+                <h5 class="m-0">Hoş Geldin, <span id="userDisp" class="text-primary fw-bold"></span></h5>
+            </div>
+
+            <div id="appointmentSection" class="section">
+                <div class="card p-4 shadow border-0">
+                    <h4 class="text-danger mb-4 border-bottom pb-2"><i class="fa-solid fa-calendar-check"></i> Yeni Randevu Planla</h4>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Şehir</label>
+                            <select id="citySelect" class="form-select" onchange="loadDistricts()">
+                                <option value="">Şehir Seçiniz...</option>
+                                <option value="Ankara">Ankara</option>
+                                <option value="İstanbul">İstanbul</option>
+                                <option value="İzmir">İzmir</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">İlçe</label>
+                            <select id="districtSelect" class="form-select" disabled onchange="loadHospitals()">
+                                <option value="">Önce Şehir Seçin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Hastane</label>
+                            <select id="hospitalSelect" class="form-select" disabled onchange="fetchDoctors()">
+                                <option value="">Önce İlçe Seçin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Doktor (Klinik)</label>
+                            <select id="doctorSelect" class="form-select shadow-sm" disabled>
+                                <option value="">Önce Hastane Seçin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Randevu Tarihi</label>
+                            <input type="datetime-local" id="app_date" class="form-control">
+                        </div>
+                        <div class="col-12 text-center mt-4">
+                            <button class="btn btn-danger btn-lg px-5 shadow" onclick="saveAppointment()">Randevuyu Onayla</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="myAppointmentsSection" class="section">
+                <div class="card p-4 shadow border-0">
+                    <h4 class="text-primary mb-4"><i class="fa-solid fa-list-ul"></i> Aktif Randevularım</h4>
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                        <tr><th>Hastane</th><th>Doktor</th><th>Tarih & Saat</th><th>Durum</th><th>İşlem</th></tr>
+                        </thead>
+                        <tbody id="appointmentTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="homeSection" class="section active text-center mt-5">
+                <div class="card p-5 border-0 shadow-sm">
+                    <i class="fa-solid fa-hospital fa-4x text-primary mb-3"></i>
+                    <h2>HKS Portalına Hoş Geldiniz</h2>
+                    <p class="text-muted lead">Sağlığınız bizim için değerli. İşlemlere başlamak için sol menüyü kullanabilirsiniz.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/api";
+    const dataMapping = {
+        "Ankara": { "Çankaya": ["Ankara Şehir", "Gazi Üni"], "Keçiören": ["Eğitim Araştırma"] },
+        "İstanbul": { "Fatih": ["Çapa Tıp", "Cerrahpaşa"], "Beşiktaş": ["Sait Çiftçi"] },
+        "İzmir": { "Konak": ["Ege Üni", "Alsancak"] }
+    };
+
+    // FORM GEÇİŞİ (GİRİŞ <-> KAYIT)
+    function toggleForm(reg) {
+        document.getElementById('registerFields').style.display = reg ? 'block' : 'none';
+        document.getElementById('formTitle').innerText = reg ? 'HKS KAYIT OL' : 'HKS GİRİŞ';
+        document.getElementById('mainBtn').innerText = reg ? 'Hesap Oluştur' : 'Giriş Yap';
+        document.getElementById('mainBtn').onclick = reg ? handleRegister : handleLogin;
+        document.getElementById('toggleText').innerHTML = reg ?
+            'Zaten üye misiniz? <a href="javascript:void(0)" onclick="toggleForm(false)" class="fw-bold text-decoration-none">Giriş Yap</a>' :
+            'Hesabınız yok mu? <a href="javascript:void(0)" onclick="toggleForm(true)" class="fw-bold text-decoration-none">Hemen Kayıt Ol</a>';
+    }
+
+    // GİRİŞ YAPMA FONKSİYONU
+    function handleLogin() {
+        const tc = document.getElementById('u_tc').value;
+        const pass = document.getElementById('u_pass').value;
+
+        if(!tc || !pass) return alert("Lütfen TC ve Şifre giriniz!");
+
+        fetch(`${API_URL}/patients/login`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ tcNo: tc, password: pass })
+        })
+        .then(res => {
+            if(!res.ok) throw new Error();
+            return res.json();
+        })
+        .then(user => {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainPanel').style.display = 'block';
+            document.getElementById('userDisp').innerText = user.firstName + " " + user.lastName;
+            sessionStorage.setItem('patientId', user.id);
+        })
+        .catch(() => alert("Hatalı TC veya Şifre!"));
+    }
+
+    // KAYIT OLMA FONKSİYONU
+    function handleRegister() {
+        const payload = {
+            tcNo: document.getElementById('u_tc').value,
+            firstName: document.getElementById('reg_name').value,
+            lastName: document.getElementById('reg_surname').value,
+            password: document.getElementById('u_pass').value
+        };
+        fetch(`${API_URL}/patients/register`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+        .then(() => { alert("Kayıt Başarılı! Şimdi giriş yapabilirsiniz."); toggleForm(false); });
+    }
+
+    // SAYFA GÖSTERİMİ
+    function showSection(id, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        el.classList.add('active');
+        if(id === 'myAppointmentsSection') loadMyAppointments();
+    }
+
+    // HİYERARŞİK SEÇİMLER (ŞEHİR -> İLÇE -> HASTANE)
+    function loadDistricts() {
+        const city = document.getElementById('citySelect').value;
+        const dSel = document.getElementById('districtSelect');
+        const hSel = document.getElementById('hospitalSelect');
+        dSel.innerHTML = '<option value="">Seçiniz...</option>';
+        hSel.disabled = true;
+        if(city) { dSel.disabled = false; Object.keys(dataMapping[city]).forEach(d => dSel.innerHTML += `<option value="${d}">${d}</option>`); }
+    }
+
+    function loadHospitals() {
+        const city = document.getElementById('citySelect').value;
+        const dist = document.getElementById('districtSelect').value;
+        const hSel = document.getElementById('hospitalSelect');
+        hSel.innerHTML = '<option value="">Seçiniz...</option>';
+        if(dist) { hSel.disabled = false; dataMapping[city][dist].forEach(h => hSel.innerHTML += `<option value="${h}">${h}</option>`); }
+    }
+
+    // DOKTORLARI GETİR (Hastane seçildikten sonra tetiklenir)
+    function fetchDoctors() {
+        const dSel = document.getElementById('doctorSelect');
+        dSel.disabled = false;
+        dSel.innerHTML = '<option value="">Doktorlar Yükleniyor...</option>';
+
+        fetch(`${API_URL}/doctors`).then(res => res.json()).then(data => {
+            dSel.innerHTML = '<option value="">Doktor Seçin...</option>';
+            data.forEach(d => dSel.innerHTML += `<option value="${d.id}">${d.firstName} ${d.lastName} (${d.specialty})</option>`);
+        });
+    }
+
+    // RANDEVU KAYDET
+    function saveAppointment() {
+        const pId = sessionStorage.getItem('patientId');
+        const dId = document.getElementById('doctorSelect').value;
+        const date = document.getElementById('app_date').value;
+        const hosp = document.getElementById('hospitalSelect').value;
+
+        if(!dId || !date) return alert("Lütfen doktor ve tarih seçiniz!");
+
+        const payload = {
+            patient: { id: parseInt(pId) },
+            doctor: { id: parseInt(dId) },
+            appointmentDate: date,
+            hospitalName: hosp
+        };
+
+        fetch(`${API_URL}/appointments`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+        .then(() => {
+            alert("Randevunuz başarıyla alındı!");
+            showSection('myAppointmentsSection', document.querySelector('[onclick*="myAppointmentsSection"]'));
+        });
+    }
+
+    // RANDEVULARI LİSTELE
+    function loadMyAppointments() {
+        const pId = sessionStorage.getItem('patientId');
+        fetch(`${API_URL}/appointments`).then(res => res.json()).then(data => {
+            const body = document.getElementById('appointmentTableBody');
+            body.innerHTML = "";
+            const myData = data.filter(app => app.patient && String(app.patient.id) === String(pId));
+            if(!myData.length) body.innerHTML = "<tr><td colspan='5' class='text-center'>Aktif randevunuz bulunmamaktadır.</td></tr>";
+            myData.forEach(app => {
+                body.innerHTML += `<tr>
+                    <td>${app.hospitalName || 'Belirtilmemiş'}</td>
+                    <td>${app.doctor.firstName} ${app.doctor.lastName}</td>
+                    <td>${new Date(app.appointmentDate).toLocaleString('tr-TR')}</td>
+                    <td><span class='badge bg-success'>Onaylandı</span></td>
+                    <td><button onclick="cancelApp(${app.id})" class='btn btn-sm btn-danger'><i class="fa-solid fa-trash"></i> İptal</button></td>
+                </tr>`;
+            });
+        });
+    }
+
+    function cancelApp(id) { if(confirm("Randevuyu iptal etmek istediğinize emin misiniz?")) fetch(`${API_URL}/appointments/${id}`, { method: 'DELETE' }).then(() => loadMyAppointments()); }
+    function logout() { sessionStorage.clear(); location.reload(); }
+</script>
+</body>
+</html>
