@@ -27,5 +27,5 @@ Bu proje, hastaların online olarak randevu alabilmesini sağlayan, Full-Stack b
 3. Projeyi çalıştırın ve tarayıcıda `http://localhost:8080` adresine gidin.
 
   <img width="536" height="526" alt="image" src="https://github.com/user-attachments/assets/581de2bf-5cd0-4d1a-bd98-7b881414b558" />
-![Ekran görüntüsü 2026-03-24 191438](https://github.com/user-attachments/assets/460b27fb-7358-4057-9c82-92b76c14fb2a)
-![Ekran görüntüsü 2026-03-24 191500](https://github.com/user-attachments/assets/69c946d0-e15d-4a64-ba07-f7eb749310ff)
+https://github.com/user-attachments/assets/460b27fb-7358-4057-9c82-92b76c14fb2a
+https://github.com/user-attachments/assets/69c946d0-e15d-4a64-ba07-f7eb749310ff
